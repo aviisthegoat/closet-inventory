@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabaseClient";
 
-export default function LoginPage() {
+function LoginPageInner() {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "sent" | "error">(
     "idle",
@@ -89,6 +89,22 @@ export default function LoginPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-zinc-50 px-4">
+          <div className="w-full max-w-md rounded-3xl bg-white p-8 shadow-xl">
+            <p className="text-sm text-zinc-500">Loading sign-in…</p>
+          </div>
+        </div>
+      }
+    >
+      <LoginPageInner />
+    </Suspense>
   );
 }
 

@@ -202,7 +202,6 @@ export default function NewReservationPage() {
       userId: null,
       action: "reservation_created",
       entityType: "item",
-      entityId: null,
       details: {
         reservation_any_id: (data as any)?.[0]?.id,
         items_count: lines.length,

@@ -33,14 +33,14 @@ export default function ScanPage() {
         setError(err?.message ?? "Unable to read QR code.");
         setScanning(false);
       } finally {
-        codeReader.reset();
+        (codeReader as any)?.reset?.();
       }
     };
 
     startScan();
 
     return () => {
-      codeReader.reset();
+      (codeReader as any)?.reset?.();
     };
   }, [router]);
 

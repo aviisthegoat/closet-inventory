@@ -43,7 +43,7 @@ export default async function QrPage({ params }: QrPageProps) {
             {bin?.label ?? "Bin"}
           </h1>
           <p className="mt-1 text-xs text-zinc-500">
-            {bin?.locations?.name ?? "Location not assigned"}
+            {bin?.locations?.[0]?.name ?? "Location not assigned"}
           </p>
           {bin?.notes && (
             <p className="mt-3 text-xs text-zinc-500">{bin.notes}</p>
@@ -125,7 +125,7 @@ export default async function QrPage({ params }: QrPageProps) {
                     {item.bins?.label ?? "Bin"}
                   </p>
                   <p className="text-[11px] text-zinc-500">
-                    {item.bins?.locations?.name ?? "Location not assigned"}
+                    {item.bins?.locations?.[0]?.name ?? "Location not assigned"}
                   </p>
                 </div>
                 <p className="text-zinc-600">
