@@ -35,7 +35,7 @@ export default async function DashboardLayout({
             CI
           </div>
           <div>
-            <p className="text-sm font-semibold">Closet Inventory</p>
+            <p className="text-sm font-semibold">Closet Inventory Management</p>
             <p className="text-xs text-zinc-500">Storage room dashboard</p>
           </div>
         </div>
@@ -66,7 +66,7 @@ export default async function DashboardLayout({
       </aside>
       <div className="flex-1">
         <header className="flex items-center justify-between border-b border-zinc-200 bg-white/70 px-4 py-3 backdrop-blur md:hidden">
-          <p className="text-sm font-semibold">Closet Inventory</p>
+          <p className="text-sm font-semibold">Closet Inventory Management</p>
         </header>
         <main className="mx-auto max-w-6xl px-4 py-6 md:px-8">
           {children}

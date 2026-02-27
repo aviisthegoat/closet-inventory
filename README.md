@@ -1,4 +1,4 @@
-## Closet Inventory & Checkout App
+## Closet Inventory Management & Checkout App
 
 A mobile-friendly inventory system for your shared storage closet with:
 

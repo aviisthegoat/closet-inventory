@@ -46,7 +46,7 @@ function LoginPageInner() {
     <div className="flex min-h-screen items-center justify-center bg-zinc-50 px-4">
       <div className="w-full max-w-md rounded-3xl bg-white p-8 shadow-xl">
         <h1 className="mb-2 text-2xl font-semibold tracking-tight text-zinc-900">
-          Closet Inventory
+          Closet Inventory Management
         </h1>
         <p className="mb-6 text-sm text-zinc-500">
           Sign in with your school email to access the inventory dashboard.
