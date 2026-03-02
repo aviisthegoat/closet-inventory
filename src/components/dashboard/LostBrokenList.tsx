@@ -59,6 +59,13 @@ export function LostBrokenList({ initial }: { initial: LostBrokenRow[] }) {
           c.bins?.label ??
           "Item or bin";
 
+        const reason =
+          c.event_name === "Used"
+            ? "Used"
+            : c.issue_type === "lost"
+              ? "Lost"
+              : "Broken";
+
         return (
           <div
             key={c.id}
@@ -69,8 +76,7 @@ export function LostBrokenList({ initial }: { initial: LostBrokenRow[] }) {
                 {label}
               </p>
               <p className="text-[11px] text-rose-800">
-                {c.issue_type === "lost" ? "Lost" : "Broken"} ·{" "}
-                {c.borrower_name}
+                {reason} · {c.borrower_name}
                 {c.club_name ? ` · ${c.club_name}` : ""}
               </p>
               {c.notes && (

@@ -13,14 +13,14 @@ type ItemOption = {
   unit: string;
 };
 
-type IssueType = "lost" | "broken";
+type IssueKind = "lost" | "broken" | "used";
 
 export default function LostReportPage() {
   const router = useRouter();
   const [items, setItems] = useState<ItemOption[]>([]);
   const [selectedItemId, setSelectedItemId] = useState<string>("");
   const [quantity, setQuantity] = useState<number>(1);
-  const [issueType, setIssueType] = useState<IssueType>("lost");
+  const [issueKind, setIssueKind] = useState<IssueKind>("lost");
   const [who, setWho] = useState("");
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
@@ -71,7 +71,7 @@ export default function LostReportPage() {
       return;
     }
     if (!quantity || quantity <= 0) {
-      setError("Enter how many were lost or broken.");
+      setError("Enter how many were lost, broken, or used.");
       return;
     }
 
@@ -84,6 +84,9 @@ export default function LostReportPage() {
     const safeQty = Math.min(quantity, item?.quantityOnHand ?? quantity);
 
     // Create a synthetic checkout row so the dashboard lost / broken card picks it up
+    const isBroken = issueKind === "broken";
+    const eventName = issueKind === "used" ? "Used" : "Inventory adjustment";
+
     const { error: insertError, data: inserted } = await supabase
       .from("checkouts")
       .insert({
@@ -92,11 +95,16 @@ export default function LostReportPage() {
         borrower_name: who || "Internal",
         borrower_type: "internal",
         club_name: null,
-        event_name: "Inventory adjustment",
+        event_name: eventName,
         quantity: safeQty,
         status: "lost",
-        issue_type: issueType,
-        notes: notes || null,
+        issue_type: isBroken ? "broken" : "lost",
+        notes:
+          issueKind === "used"
+            ? notes
+              ? `Used: ${notes}`
+              : "Used"
+            : notes || null,
       })
       .select("id")
       .single();
@@ -132,7 +140,7 @@ export default function LostReportPage() {
       details: {
         item_id: selectedItemId,
         quantity: safeQty,
-        issue_type: issueType,
+        issue_kind: issueKind,
         who: who || null,
       },
     });
@@ -146,11 +154,11 @@ export default function LostReportPage() {
     <div className="space-y-6">
       <header>
         <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">
-          Report lost / broken items
+          Report lost / broken / used
         </h1>
         <p className="mt-1 text-sm text-zinc-500">
-          Log items that were lost or broken even if they weren&apos;t checked
-          out through the system.
+          Log items that were lost, broken, or fully used up even if they
+          weren&apos;t checked out through the system.
         </p>
       </header>
 
@@ -189,9 +197,9 @@ export default function LostReportPage() {
             <div className="flex gap-2 text-xs">
               <button
                 type="button"
-                onClick={() => setIssueType("lost")}
+                  onClick={() => setIssueKind("lost")}
                 className={`flex-1 rounded-2xl border px-3 py-1.5 ${
-                  issueType === "lost"
+                    issueKind === "lost"
                     ? "border-rose-500 bg-rose-50 text-rose-700"
                     : "border-zinc-200 bg-zinc-50 text-zinc-700"
                 }`}
@@ -200,14 +208,25 @@ export default function LostReportPage() {
               </button>
               <button
                 type="button"
-                onClick={() => setIssueType("broken")}
+                  onClick={() => setIssueKind("broken")}
                 className={`flex-1 rounded-2xl border px-3 py-1.5 ${
-                  issueType === "broken"
+                    issueKind === "broken"
                     ? "border-amber-500 bg-amber-50 text-amber-800"
                     : "border-zinc-200 bg-zinc-50 text-zinc-700"
                 }`}
               >
                 Broken
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIssueKind("used")}
+                  className={`flex-1 rounded-2xl border px-3 py-1.5 ${
+                    issueKind === "used"
+                      ? "border-indigo-500 bg-indigo-50 text-indigo-800"
+                      : "border-zinc-200 bg-zinc-50 text-zinc-700"
+                  }`}
+                >
+                  Used
               </button>
             </div>
           </div>
