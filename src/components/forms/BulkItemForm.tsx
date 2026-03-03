@@ -13,6 +13,7 @@ type BulkItemFormProps = {
 
 type BulkLine = {
   item_group_id: string;
+  new_group_name: string;
   bin_id: string;
   location_id: string;
   quantity: number;
@@ -27,6 +28,7 @@ export function BulkItemForm({ onCreated }: BulkItemFormProps) {
   const [lines, setLines] = useState<BulkLine[]>([
     {
       item_group_id: "",
+      new_group_name: "",
       bin_id: "",
       location_id: "",
       quantity: 1,
@@ -94,6 +96,7 @@ export function BulkItemForm({ onCreated }: BulkItemFormProps) {
       ...prev,
       {
         item_group_id: "",
+        new_group_name: "",
         bin_id: "",
         location_id: "",
         quantity: 1,
@@ -114,10 +117,70 @@ export function BulkItemForm({ onCreated }: BulkItemFormProps) {
 
     const supabase = createSupabaseBrowserClient();
 
-    const payload = lines
-      .filter((line) => line.item_group_id && line.quantity > 0)
-      .map((line) => ({
-        item_group_id: line.item_group_id,
+    const nonEmptyLines = lines.filter(
+      (line) =>
+        (line.item_group_id || line.new_group_name.trim()) &&
+        line.quantity > 0,
+    );
+
+    if (nonEmptyLines.length === 0) {
+      setError("Add at least one valid item line with an item type.");
+      setSaving(false);
+      return;
+    }
+
+    const resolvedPayload: any[] = [];
+    const groupCache = new Map<string, string>(); // lowercased name -> id
+
+    for (const line of nonEmptyLines) {
+      let resolvedGroupId = line.item_group_id;
+      const nameFromSelect =
+        groups.find((g) => g.id === line.item_group_id)?.name ?? "";
+      const nameToUse = line.new_group_name.trim() || nameFromSelect;
+
+      if (!resolvedGroupId || line.new_group_name.trim()) {
+        if (!nameToUse) {
+          setError("Each line must have an item type selected or typed.");
+          setSaving(false);
+          return;
+        }
+
+        const cacheKey = nameToUse.toLowerCase();
+        if (groupCache.has(cacheKey)) {
+          resolvedGroupId = groupCache.get(cacheKey)!;
+        } else {
+          const { data: existing } = await supabase
+            .from("item_groups")
+            .select("id")
+            .ilike("name", nameToUse)
+            .maybeSingle();
+          if (existing?.id) {
+            resolvedGroupId = existing.id as string;
+          } else {
+            const { data: created, error: ge } = await supabase
+              .from("item_groups")
+              .insert({ name: nameToUse })
+              .select("id")
+              .single();
+            if (ge || !created) {
+              setError(ge?.message ?? "Could not create item type.");
+              setSaving(false);
+              return;
+            }
+            resolvedGroupId = created.id as string;
+          }
+          groupCache.set(cacheKey, resolvedGroupId);
+        }
+      }
+
+      if (!resolvedGroupId) {
+        setError("Each line must have an item type.");
+        setSaving(false);
+        return;
+      }
+
+      resolvedPayload.push({
+        item_group_id: resolvedGroupId,
         bin_id: line.bin_id || null,
         location_id: line.bin_id ? null : line.location_id || null,
         quantity_on_hand: line.quantity,
@@ -127,17 +190,12 @@ export function BulkItemForm({ onCreated }: BulkItemFormProps) {
             ? null
             : Number(line.low_stock_threshold),
         notes: null,
-      }));
-
-    if (payload.length === 0) {
-      setError("Add at least one valid item line.");
-      setSaving(false);
-      return;
+      });
     }
 
     const { error: insertErr } = await supabase
       .from("items")
-      .insert(payload as any[]);
+      .insert(resolvedPayload);
 
     if (insertErr) {
       setError(insertErr.message);
@@ -149,6 +207,7 @@ export function BulkItemForm({ onCreated }: BulkItemFormProps) {
     setLines([
       {
         item_group_id: "",
+        new_group_name: "",
         bin_id: "",
         location_id: "",
         quantity: 1,
@@ -162,8 +221,8 @@ export function BulkItemForm({ onCreated }: BulkItemFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-3 text-sm">
       <p className="text-xs text-zinc-500">
-        Quickly add several items at once. Pick an existing item type for each
-        row.
+        Quickly add several items at once. Pick an existing item type or type a
+        new one for each row.
       </p>
       <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
         {lines.map((line, index) => (
@@ -196,13 +255,21 @@ export function BulkItemForm({ onCreated }: BulkItemFormProps) {
                 }
                 className="block w-full rounded-2xl border border-zinc-200 bg-white px-3 py-1.5 text-xs focus:border-zinc-400 focus:ring-2 focus:ring-zinc-200"
               >
-                <option value="">Choose item type</option>
+                <option value="">Choose existing type</option>
                 {groups.map((g) => (
                   <option key={g.id} value={g.id}>
                     {g.name}
                   </option>
                 ))}
               </select>
+              <input
+                value={line.new_group_name}
+                onChange={(e) =>
+                  updateLine(index, { new_group_name: e.target.value })
+                }
+                placeholder="Or type new type (e.g. Christmas lights)"
+                className="mt-1 block w-full rounded-2xl border border-zinc-200 bg-white px-3 py-1.5 text-xs focus:border-zinc-400 focus:ring-2 focus:ring-zinc-200"
+              />
             </div>
             <div className="space-y-1">
               <label className="block text-[11px] font-medium text-zinc-700">
