@@ -30,6 +30,7 @@ export default async function DashboardPage() {
         "id, borrower_name, club_name, event_name, issue_type, issue_resolved, notes, items(item_groups(name)), bins(label)",
       )
       .not("issue_type", "is", null)
+      .neq("event_name", "Used")
       .or("issue_resolved.is.null,issue_resolved.eq.false")
       .order("checked_out_at", { ascending: false })
       .limit(5),
