@@ -265,16 +265,10 @@ export default function LocationsPage() {
                   )}
                 </div>
                 <div className="flex flex-col items-end gap-1">
-                  <a
-                    href={`/map#${loc.id}`}
-                    className="shrink-0 rounded-full bg-zinc-900 px-3 py-1 text-[11px] font-medium text-white hover:bg-zinc-800"
-                  >
-                    Open location
-                  </a>
                   <button
                     type="button"
                     onClick={() => beginEditLocation(loc)}
-                    className="text-[11px] font-medium text-zinc-500 hover:text-zinc-800"
+                    className="shrink-0 rounded-full bg-zinc-900 px-3 py-1 text-[11px] font-medium text-white hover:bg-zinc-800"
                   >
                     Edit
                   </button>
