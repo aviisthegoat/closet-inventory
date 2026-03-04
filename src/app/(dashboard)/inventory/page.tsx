@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabaseClient";
+import { logActivity } from "@/lib/activityLogger";
 import { ItemForm } from "@/components/forms/ItemForm";
 import { BulkItemForm } from "@/components/forms/BulkItemForm";
 
@@ -330,18 +331,54 @@ export default function InventoryPage() {
                 Close
               </button>
             </div>
-            <ItemForm
-              mode="edit"
-              itemId={editItemId}
-              initialData={editInitial}
-              onSaved={async () => {
-                setEditItemId(null);
-                setEditInitial(null);
-                const supabase = createSupabaseBrowserClient();
-                const { data } = await supabase.from("v_items_with_status").select("*");
-                setItems((data as ItemRow[]) ?? []);
-              }}
-            />
+            <div className="space-y-4">
+              <ItemForm
+                mode="edit"
+                itemId={editItemId}
+                initialData={editInitial}
+                onSaved={async () => {
+                  setEditItemId(null);
+                  setEditInitial(null);
+                  const supabase = createSupabaseBrowserClient();
+                  const { data } =
+                    await supabase.from("v_items_with_status").select("*");
+                  setItems((data as ItemRow[]) ?? []);
+                }}
+              />
+              <div className="flex items-center justify-between border-t border-zinc-100 pt-3">
+                <p className="text-[11px] text-zinc-500">
+                  Need to remove this item completely?
+                </p>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (!editItemId) return;
+                    // eslint-disable-next-line no-alert
+                    const confirmed = window.confirm(
+                      "Delete this item from inventory? Existing checkout history will stay, but this item record will be gone.",
+                    );
+                    if (!confirmed) return;
+                    const supabase = createSupabaseBrowserClient();
+                    await supabase.from("items").delete().eq("id", editItemId);
+                    await logActivity(supabase, {
+                      userId: null,
+                      action: "item_deleted",
+                      entityType: "item",
+                      entityId: editItemId,
+                      details: {},
+                    });
+                    setEditItemId(null);
+                    setEditInitial(null);
+                    const { data } =
+                      await supabase.from("v_items_with_status").select("*");
+                    setItems((data as ItemRow[]) ?? []);
+                  }}
+                  className="rounded-2xl border border-rose-200 bg-rose-50 px-3 py-1.5 text-[11px] font-medium text-rose-700 hover:bg-rose-100"
+                >
+                  Delete item
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
