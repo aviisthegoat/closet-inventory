@@ -8,12 +8,16 @@ export default async function DashboardPage() {
   const supabase = createSupabaseServerClient(cookieStore);
 
   const nowIso = new Date().toISOString();
+  const twoWeeksIso = new Date(
+    Date.now() + 14 * 24 * 60 * 60 * 1000,
+  ).toISOString();
 
   const [
     { data: lowStock },
     { data: activeRows },
     { data: issueCheckouts },
     { data: reservations },
+    { data: expiringSoon },
   ] = await Promise.all([
     supabase.from("v_low_stock_items").select("*").limit(5),
     supabase
@@ -42,6 +46,15 @@ export default async function DashboardPage() {
       .in("status", ["planned", "confirmed"])
       .gte("start_at", nowIso)
       .order("start_at", { ascending: true })
+      .limit(5),
+    supabase
+      .from("items")
+      .select(
+        "id, expiry_date, quantity_on_hand, unit, item_groups(name), bins(label, locations(name)), locations(name)",
+      )
+      .gte("expiry_date", nowIso)
+      .lte("expiry_date", twoWeeksIso)
+      .order("expiry_date", { ascending: true })
       .limit(5),
   ]);
 
@@ -205,6 +218,55 @@ export default async function DashboardPage() {
           <div className="mt-3">
             <ActiveCheckoutsList initial={(activeCheckouts as any) ?? []} />
           </div>
+        </div>
+      </section>
+      <section className="rounded-3xl bg-white p-4 shadow-sm ring-1 ring-zinc-100">
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-zinc-900">
+            Expiring in next 2 weeks
+          </h2>
+        </div>
+        <div className="mt-3 space-y-2 text-xs">
+          {expiringSoon && (expiringSoon as any).length > 0 ? (
+            (expiringSoon as any).map((item: any) => {
+              const groupName = item.item_groups?.name ?? "Item";
+              const binLabel = item.bins?.label ?? null;
+              const locFromBin = item.bins?.locations?.name ?? null;
+              const locDirect = item.locations?.name ?? null;
+              const location = locDirect ?? locFromBin ?? "No location";
+              const expiry =
+                item.expiry_date &&
+                new Date(item.expiry_date).toLocaleDateString(undefined, {
+                  month: "short",
+                  day: "numeric",
+                });
+              return (
+                <div
+                  key={item.id}
+                  className="flex items-center justify-between rounded-2xl border border-rose-100 bg-rose-50 px-3 py-2"
+                >
+                  <div>
+                    <p className="text-[11px] font-medium text-rose-900">
+                      {groupName}
+                    </p>
+                    <p className="text-[11px] text-rose-800">
+                      {item.quantity_on_hand} {item.unit}
+                      {binLabel && ` · ${binLabel}`}
+                      {" · "}
+                      {location}
+                    </p>
+                  </div>
+                  <p className="text-[11px] font-medium text-rose-900">
+                    {expiry ?? "Soon"}
+                  </p>
+                </div>
+              );
+            })
+          ) : (
+            <p className="text-xs text-zinc-500">
+              No items with expiry dates in the next two weeks.
+            </p>
+          )}
         </div>
       </section>
       <section className="grid gap-4 md:grid-cols-2">

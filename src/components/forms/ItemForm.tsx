@@ -24,6 +24,7 @@ type ItemFormProps = {
     unit: string;
     low_stock_threshold: number | null;
     notes: string | null;
+    expiry_date?: string | null;
   };
   onSaved?: () => void;
 };
@@ -50,6 +51,11 @@ export function ItemForm({
     initialData?.low_stock_threshold ?? ""
   );
   const [notes, setNotes] = useState(initialData?.notes ?? "");
+  const [expiryDate, setExpiryDate] = useState(
+    initialData?.expiry_date
+      ? initialData.expiry_date.slice(0, 10)
+      : "",
+  );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -99,6 +105,9 @@ export function ItemForm({
       setUnit(initialData.unit);
       setLowStockThreshold(initialData.low_stock_threshold ?? "");
       setNotes(initialData.notes ?? "");
+      setExpiryDate(
+        initialData.expiry_date ? initialData.expiry_date.slice(0, 10) : "",
+      );
     } else if (defaultBinId) {
       setBinId(defaultBinId);
     }
@@ -144,6 +153,9 @@ export function ItemForm({
           unit,
           low_stock_threshold: lowStockThreshold === "" ? null : Number(lowStockThreshold),
           notes: notes || null,
+          expiry_date: expiryDate
+            ? new Date(`${expiryDate}T00:00:00.000Z`).toISOString()
+            : null,
         })
         .eq("id", itemId);
       if (updateErr) {
@@ -163,6 +175,7 @@ export function ItemForm({
           location_id: binId ? null : locationId || null,
           quantity_on_hand: quantity,
           unit,
+          expiry_date: expiryDate || null,
         },
       });
 
@@ -212,6 +225,9 @@ export function ItemForm({
         low_stock_threshold:
           lowStockThreshold === "" ? null : Number(lowStockThreshold),
         notes: notes || null,
+        expiry_date: expiryDate
+          ? new Date(`${expiryDate}T00:00:00.000Z`).toISOString()
+          : null,
       })
       .select("id")
       .single();
@@ -232,6 +248,7 @@ export function ItemForm({
         location_id: binId ? null : locationId || null,
         quantity_on_hand: quantity,
         unit,
+        expiry_date: expiryDate || null,
       },
     });
     setNewGroupName("");
@@ -242,6 +259,7 @@ export function ItemForm({
     setUnit("pcs");
     setLowStockThreshold("");
     setNotes("");
+    setExpiryDate("");
     setSaving(false);
     onCreated?.();
   };
@@ -348,6 +366,17 @@ export function ItemForm({
           onChange={(e) =>
             setLowStockThreshold(e.target.value === "" ? "" : Number(e.target.value))
           }
+          className="block w-full rounded-2xl border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm focus:border-zinc-400 focus:bg-white focus:ring-2 focus:ring-zinc-200"
+        />
+      </div>
+      <div className="space-y-1">
+        <label className="block text-xs font-medium text-zinc-700">
+          Expiry date (optional)
+        </label>
+        <input
+          type="date"
+          value={expiryDate}
+          onChange={(e) => setExpiryDate(e.target.value)}
           className="block w-full rounded-2xl border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm focus:border-zinc-400 focus:bg-white focus:ring-2 focus:ring-zinc-200"
         />
       </div>

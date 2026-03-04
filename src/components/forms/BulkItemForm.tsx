@@ -19,6 +19,7 @@ type BulkLine = {
   quantity: number;
   unit: string;
   low_stock_threshold: number | "";
+  expiry_date: string;
 };
 
 export function BulkItemForm({ onCreated }: BulkItemFormProps) {
@@ -34,6 +35,7 @@ export function BulkItemForm({ onCreated }: BulkItemFormProps) {
       quantity: 1,
       unit: "pcs",
       low_stock_threshold: "",
+      expiry_date: "",
     },
   ]);
   const [saving, setSaving] = useState(false);
@@ -102,6 +104,7 @@ export function BulkItemForm({ onCreated }: BulkItemFormProps) {
         quantity: 1,
         unit: "pcs",
         low_stock_threshold: "",
+        expiry_date: "",
       },
     ]);
   };
@@ -189,6 +192,9 @@ export function BulkItemForm({ onCreated }: BulkItemFormProps) {
           line.low_stock_threshold === ""
             ? null
             : Number(line.low_stock_threshold),
+        expiry_date: line.expiry_date
+          ? new Date(`${line.expiry_date}T00:00:00.000Z`).toISOString()
+          : null,
         notes: null,
       });
     }
@@ -213,6 +219,7 @@ export function BulkItemForm({ onCreated }: BulkItemFormProps) {
         quantity: 1,
         unit: "pcs",
         low_stock_threshold: "",
+        expiry_date: "",
       },
     ]);
     onCreated?.();
@@ -355,6 +362,19 @@ export function BulkItemForm({ onCreated }: BulkItemFormProps) {
                         ? ""
                         : Number(e.target.value) || 0,
                   })
+                }
+                className="block w-full rounded-2xl border border-zinc-200 bg-white px-3 py-1.5 text-xs focus:border-zinc-400 focus:ring-2 focus:ring-zinc-200"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="block text-[11px] font-medium text-zinc-700">
+                Expiry date (optional)
+              </label>
+              <input
+                type="date"
+                value={line.expiry_date}
+                onChange={(e) =>
+                  updateLine(index, { expiry_date: e.target.value })
                 }
                 className="block w-full rounded-2xl border border-zinc-200 bg-white px-3 py-1.5 text-xs focus:border-zinc-400 focus:ring-2 focus:ring-zinc-200"
               />

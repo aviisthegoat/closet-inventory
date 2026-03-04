@@ -16,6 +16,7 @@ type ItemRow = {
   unit: string;
   low_stock_threshold: number | null;
   is_checked_out: boolean;
+  expiry_date: string | null;
 };
 
 export default function InventoryPage() {
@@ -34,6 +35,7 @@ export default function InventoryPage() {
     unit: string;
     low_stock_threshold: number | null;
     notes: string | null;
+    expiry_date: string | null;
   } | null>(null);
   const searchParams = useSearchParams();
 
@@ -118,6 +120,9 @@ export default function InventoryPage() {
                 Location
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
+                Expiry
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
                 Quantity
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
@@ -165,6 +170,11 @@ export default function InventoryPage() {
                     <td className="px-4 py-3 text-sm text-zinc-700">
                       {item.location_name ?? "—"}
                     </td>
+                  <td className="px-4 py-3 text-sm text-zinc-700">
+                    {item.expiry_date
+                      ? new Date(item.expiry_date).toLocaleDateString()
+                      : "—"}
+                  </td>
                     <td className="px-4 py-3 text-sm text-zinc-700">
                       {item.quantity_on_hand} {item.unit}
                     </td>
@@ -209,7 +219,7 @@ export default function InventoryPage() {
                             const { data: row, error } = await supabase
                               .from("items")
                               .select(
-                                "id, item_group_id, bin_id, location_id, quantity_on_hand, unit, low_stock_threshold, notes, item_groups(name)",
+                                "id, item_group_id, bin_id, location_id, quantity_on_hand, unit, low_stock_threshold, notes, expiry_date, item_groups(name)",
                               )
                               .eq("id", item.id)
                               .single();
@@ -251,6 +261,7 @@ export default function InventoryPage() {
                               unit: row.unit ?? "pcs",
                               low_stock_threshold: row.low_stock_threshold,
                               notes: row.notes,
+                              expiry_date: (row.expiry_date as string | null) ?? null,
                             });
                             setEditItemId(item.id);
                           }}

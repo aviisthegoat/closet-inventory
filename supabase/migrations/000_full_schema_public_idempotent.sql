@@ -38,6 +38,7 @@ create table if not exists public.items (
   quantity_on_hand numeric(10,2) not null default 0,
   unit text default 'pcs',
   low_stock_threshold numeric(10,2),
+  expiry_date timestamptz,
   notes text,
   created_at timestamptz default now()
 );
@@ -111,6 +112,9 @@ create index if not exists idx_locations_name on public.locations (name);
 alter table public.items
   add column if not exists location_id uuid references public.locations(id) on delete set null;
 
+alter table public.items
+  add column if not exists expiry_date timestamptz;
+
 -- ========== VIEWS ==========
 create or replace view public.v_items_with_status as
 select
@@ -121,6 +125,7 @@ select
   i.quantity_on_hand,
   i.unit,
   i.low_stock_threshold,
+  i.expiry_date,
   exists (
     select 1 from public.checkouts c
     where c.item_id = i.id and c.status = 'checked_out'
