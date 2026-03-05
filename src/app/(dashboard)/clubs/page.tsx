@@ -1,4 +1,4 @@
-"use client";
+ "use client";
 
 import { useEffect, useState } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabaseClient";
@@ -34,6 +34,9 @@ export default function ClubRequestsPage() {
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [orderingId, setOrderingId] = useState<string | null>(null);
+  const [editing, setEditing] = useState<RequestRow | null>(null);
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -84,7 +87,6 @@ export default function ClubRequestsPage() {
       let itemId = row.item_id;
 
       if (!itemId) {
-        // Create a new item group and item for custom requests
         const { data: group, error: groupErr } = await supabase
           .from("item_groups")
           .insert({
@@ -110,7 +112,6 @@ export default function ClubRequestsPage() {
 
         itemId = item.id as string;
       } else {
-        // Increase quantity_on_hand for an existing item
         const { data: existing, error: itemErr } = await supabase
           .from("items")
           .select("id, quantity_on_hand")
@@ -157,7 +158,6 @@ export default function ClubRequestsPage() {
       );
     } catch (err) {
       console.error("Failed to mark ordered and add to inventory", err);
-      // We intentionally don't surface a toast here yet; console is enough for now.
     } finally {
       setOrderingId(null);
     }
@@ -290,6 +290,33 @@ export default function ClubRequestsPage() {
                       </button>
                       <button
                         type="button"
+                        onClick={() => setEditing(r)}
+                        className="rounded-2xl border border-zinc-200 bg-white px-3 py-1 text-[11px] font-medium text-zinc-700 hover:bg-zinc-50"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        disabled={deletingId === r.id}
+                        onClick={async () => {
+                          if (!window.confirm("Delete this club request?")) {
+                            return;
+                          }
+                          setDeletingId(r.id);
+                          const supabase = createSupabaseBrowserClient();
+                          await supabase
+                            .from("club_requests")
+                            .delete()
+                            .eq("id", r.id);
+                          setRows((prev) => prev.filter((row) => row.id !== r.id));
+                          setDeletingId(null);
+                        }}
+                        className="rounded-2xl border border-rose-200 bg-rose-50 px-3 py-1 text-[11px] font-medium text-rose-700 hover:bg-rose-100 disabled:opacity-50"
+                      >
+                        {deletingId === r.id ? "Deleting…" : "Delete"}
+                      </button>
+                      <button
+                        type="button"
                         disabled={
                           updatingId === r.id || r.status === "resolved"
                         }
@@ -347,6 +374,193 @@ export default function ClubRequestsPage() {
           })}
         </div>
       )}
+      {editing && (
+        <EditClubRequestModal
+          row={editing}
+          saving={savingEdit}
+          onClose={() => setEditing(null)}
+          onSave={async (updates) => {
+            const supabase = createSupabaseBrowserClient();
+            setSavingEdit(true);
+            try {
+              const { error } = await supabase
+                .from("club_requests")
+                .update({
+                  custom_item_name: updates.custom_item_name,
+                  requested_quantity: updates.requested_quantity,
+                  product_url: updates.product_url,
+                  estimated_unit_price: updates.estimated_unit_price,
+                  delivery_details: updates.delivery_details,
+                })
+                .eq("id", editing.id);
+              if (error) throw error;
+              setRows((prev) =>
+                prev.map((r) =>
+                  r.id === editing.id ? { ...r, ...updates } : r,
+                ),
+              );
+              setEditing(null);
+            } catch (e) {
+              // eslint-disable-next-line no-console
+              console.error("Failed to update club request", e);
+            } finally {
+              setSavingEdit(false);
+            }
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+type EditClubRequestModalProps = {
+  row: RequestRow;
+  saving: boolean;
+  onClose: () => void;
+  onSave: (updates: Partial<RequestRow>) => Promise<void>;
+};
+
+function EditClubRequestModal({
+  row,
+  saving,
+  onClose,
+  onSave,
+}: EditClubRequestModalProps) {
+  const [form, setForm] = useState<Partial<RequestRow>>({
+    custom_item_name: row.custom_item_name,
+    requested_quantity: row.requested_quantity,
+    product_url: row.product_url,
+    estimated_unit_price: row.estimated_unit_price ?? null,
+    delivery_details: row.delivery_details ?? "",
+  });
+
+  const setField = <K extends keyof RequestRow>(
+    key: K,
+    value: RequestRow[K],
+  ) => setForm((prev) => ({ ...prev, [key]: value }));
+
+  const isCustom = !row.item_id;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 p-4">
+      <div className="w-full max-w-md rounded-3xl bg-white p-4 shadow-xl ring-1 ring-zinc-100">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-zinc-900">
+            Edit club request
+          </h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-xs text-zinc-500 hover:text-zinc-800"
+          >
+            Close
+          </button>
+        </div>
+        <div className="space-y-3 text-xs">
+          {isCustom && (
+            <div className="space-y-1">
+              <label className="block text-[11px] font-medium text-zinc-700">
+                Item name
+              </label>
+              <input
+                type="text"
+                value={form.custom_item_name ?? ""}
+                onChange={(e) =>
+                  setField("custom_item_name", e.target.value || null)
+                }
+                className="w-full rounded-2xl border border-zinc-200 bg-zinc-50 px-3 py-2 text-xs"
+              />
+            </div>
+          )}
+          <div className="grid gap-3 md:grid-cols-2">
+            <div className="space-y-1">
+              <label className="block text-[11px] font-medium text-zinc-700">
+                Quantity
+              </label>
+              <input
+                type="number"
+                min={1}
+                value={form.requested_quantity ?? 1}
+                onChange={(e) =>
+                  setField(
+                    "requested_quantity",
+                    Number(e.target.value) || 1,
+                  )
+                }
+                className="w-full rounded-2xl border border-zinc-200 bg-zinc-50 px-3 py-2 text-xs"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="block text-[11px] font-medium text-zinc-700">
+                Unit cost (optional)
+              </label>
+              <div className="flex items-center gap-1">
+                <span className="text-[11px] text-zinc-500">$</span>
+                <input
+                  type="number"
+                  min={0}
+                  step={0.01}
+                  value={form.estimated_unit_price ?? ""}
+                  onChange={(e) =>
+                    setField(
+                      "estimated_unit_price",
+                      e.target.value === ""
+                        ? null
+                        : (Number(e.target.value) || 0),
+                    )
+                  }
+                  placeholder="Unit cost"
+                  className="w-full rounded-2xl border border-zinc-200 bg-zinc-50 px-3 py-2 text-xs"
+                />
+              </div>
+            </div>
+          </div>
+          <div className="space-y-1">
+            <label className="block text-[11px] font-medium text-zinc-700">
+              Product link
+            </label>
+            <input
+              type="text"
+              value={form.product_url ?? ""}
+              onChange={(e) =>
+                setField("product_url", e.target.value || null)
+              }
+              className="w-full rounded-2xl border border-zinc-200 bg-zinc-50 px-3 py-2 text-xs"
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="block text-[11px] font-medium text-zinc-700">
+              Delivery details (optional)
+            </label>
+            <textarea
+              rows={3}
+              value={form.delivery_details ?? ""}
+              onChange={(e) =>
+                setField("delivery_details", e.target.value || null)
+              }
+              className="w-full rounded-2xl border border-zinc-200 bg-zinc-50 px-3 py-2 text-xs"
+            />
+          </div>
+        </div>
+        <div className="mt-4 flex items-center justify-end gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={saving}
+            className="rounded-2xl border border-zinc-200 px-3 py-1.5 text-[11px] font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={() => onSave(form)}
+            disabled={saving}
+            className="rounded-2xl bg-zinc-900 px-3 py-1.5 text-[11px] font-medium text-white hover:bg-zinc-800 disabled:opacity-50"
+          >
+            {saving ? "Saving…" : "Save changes"}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
