@@ -446,14 +446,15 @@ export default function PublicRequestPage() {
             Request new items (not found in inventory)
           </h3>
           <p className="text-[11px] text-zinc-500">
-            For items we don&apos;t already have in our inventory, we&apos;ll do
-            our best to order them, but this isn&apos;t guaranteed.{" "}
+            For items that are not already in our inventory, we will do our best
+            to purchase them; however, availability is not guaranteed.{" "}
             <span className="font-medium">
-              As a guideline, we typically approve new purchases of around $150
-              per request, which will be paid from the club&apos;s budget.
+              As a general guideline, new purchases of up to $150 per event per
+              club can typically be approved and will be charged to the club&apos;s
+              budget.
             </span>{" "}
-            If you&apos;d like to request more than this, you may need to present
-            your idea to the Funding Committee.
+            Requests exceeding this amount may require a pitch to the Funding
+            Committee for additional approval.
           </p>
           <div className="space-y-2">
             {newLines.map((line, index) => (
@@ -544,11 +545,16 @@ export default function PublicRequestPage() {
           {isFoodOrder && (
             <div className="space-y-3 rounded-2xl border border-amber-100 bg-amber-50/60 p-3">
               <p className="text-[11px] text-amber-900">
-                Use this for pizzas, snacks, drinks, catering, etc. We&apos;ll do
-                our best, but ordering is not guaranteed and the typical budget
-                for new items requested through this form is around $150. If you
-                need more than this amount, you may need to pitch to the Funding
-                Committee.
+                Use this for pizzas, snacks, drinks, catering, etc. For items
+                that are not already in our inventory, we will do our best to
+                purchase them; however, availability is not guaranteed.{" "}
+                <span className="font-medium">
+                  As a general guideline, new purchases of up to $150 per event
+                  per club can typically be approved and will be charged to the
+                  club&apos;s budget.
+                </span>{" "}
+                Requests exceeding this amount may require a pitch to the
+                Funding Committee for additional approval.
               </p>
               <div className="space-y-2">
                 {foodLines.map((line, index) => (
