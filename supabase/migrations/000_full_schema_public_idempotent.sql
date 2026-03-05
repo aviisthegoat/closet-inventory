@@ -108,6 +108,7 @@ create table if not exists public.club_requests (
   custom_item_name text,
   requested_quantity numeric(10,2) not null,
   product_url text,
+  estimated_unit_price numeric(10,2),
   requester_name text not null,
   club_name text not null,
   level text check (level in ('UG','PG')),

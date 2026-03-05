@@ -9,6 +9,7 @@ type RequestRow = {
   custom_item_name: string | null;
   requested_quantity: number;
   product_url: string | null;
+  estimated_unit_price?: number | null;
   requester_name: string;
   club_name: string;
   level?: string | null;
@@ -202,6 +203,15 @@ export default function ClubRequestsPage() {
                 minute: "2-digit",
               });
 
+            const unitPrice =
+              typeof r.estimated_unit_price === "number"
+                ? r.estimated_unit_price
+                : null;
+            const estTotal =
+              unitPrice != null
+                ? unitPrice * Number(r.requested_quantity || 0)
+                : null;
+
             const productUrl =
               r.product_url && !/^https?:\/\//i.test(r.product_url)
                 ? `https://${r.product_url}`
@@ -219,7 +229,18 @@ export default function ClubRequestsPage() {
                     </p>
                     <p className="text-[11px] text-zinc-700">
                       {r.requested_quantity} requested
+                      {unitPrice != null && (
+                        <>
+                          {" · ~$"}
+                          {unitPrice.toFixed(2)} each
+                        </>
+                      )}
                     </p>
+                    {estTotal != null && (
+                      <p className="text-[11px] text-zinc-700">
+                        Approx. total: ${estTotal.toFixed(2)}
+                      </p>
+                    )}
                     {productUrl && (
                       <p className="text-[11px]">
                         <span className="font-medium text-zinc-700">

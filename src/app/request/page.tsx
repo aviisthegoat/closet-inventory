@@ -19,6 +19,7 @@ type NewItemLine = {
   name: string;
   quantity: number;
   productUrl: string;
+  price: number;
 };
 
 export default function PublicRequestPage() {
@@ -26,7 +27,7 @@ export default function PublicRequestPage() {
   const [loading, setLoading] = useState(true);
   const [existingLines, setExistingLines] = useState<RequestLine[]>([]);
   const [newLines, setNewLines] = useState<NewItemLine[]>([
-    { name: "", quantity: 1, productUrl: "" },
+    { name: "", quantity: 1, productUrl: "", price: 0 },
   ]);
   const [requesterName, setRequesterName] = useState("");
   const [clubName, setClubName] = useState("");
@@ -115,7 +116,10 @@ export default function PublicRequestPage() {
   };
 
   const addNewLine = () => {
-    setNewLines((prev) => [...prev, { name: "", quantity: 1, productUrl: "" }]);
+    setNewLines((prev) => [
+      ...prev,
+      { name: "", quantity: 1, productUrl: "", price: 0 },
+    ]);
   };
 
   const removeNewLine = (index: number) => {
@@ -138,6 +142,29 @@ export default function PublicRequestPage() {
     if (!responsibility) {
       setError(
         "You must confirm responsibility for the equipment to submit this request.",
+      );
+      return;
+    }
+
+    // Budget check for new items we don't own yet
+    const activeNewLines = newLines.filter(
+      (line) => line.name.trim() && line.quantity > 0 && line.productUrl.trim(),
+    );
+    for (const line of activeNewLines) {
+      if (!line.price || line.price <= 0) {
+        setError(
+          "Please enter an estimated price for each new item you want us to order.",
+        );
+        return;
+      }
+    }
+    const totalNewCost = activeNewLines.reduce(
+      (sum, line) => sum + line.price * line.quantity,
+      0,
+    );
+    if (totalNewCost > 150) {
+      setError(
+        `The total estimated cost of new items must be $150 or less. Your current total is approximately $${totalNewCost.toFixed(2)}.`,
       );
       return;
     }
@@ -209,6 +236,7 @@ export default function PublicRequestPage() {
         custom_item_name: line.name.trim(),
         requested_quantity: line.quantity,
         product_url: line.productUrl.trim(),
+        estimated_unit_price: line.price,
         requester_name: requesterName.trim(),
         club_name: clubName.trim(),
         level: level || null,
@@ -241,7 +269,7 @@ export default function PublicRequestPage() {
       setSaving(false);
       // Reset minimal fields, keep items list loaded
       setExistingLines(items.length ? [{ itemId: items[0].id, quantity: 1 }] : []);
-      setNewLines([{ name: "", quantity: 1, productUrl: "" }]);
+      setNewLines([{ name: "", quantity: 1, productUrl: "", price: 0 }]);
       setRequesterName("");
       setClubName("");
       setLevel("");
@@ -369,6 +397,14 @@ export default function PublicRequestPage() {
           <h3 className="text-xs font-semibold text-zinc-900">
             Request new items (we don&apos;t have these yet)
           </h3>
+          <p className="text-[11px] text-zinc-500">
+            For items we don&apos;t already own, we&apos;ll do our best but{" "}
+            <span className="font-medium">
+              ordering is not guaranteed and the total budget for new items is
+              capped at $150 per request
+            </span>
+            .
+          </p>
           <div className="space-y-2">
             {newLines.map((line, index) => (
               <div
@@ -396,6 +432,25 @@ export default function PublicRequestPage() {
                     placeholder="Qty"
                     className="w-20 rounded-xl border border-zinc-200 bg-white px-2 py-1.5 text-xs"
                   />
+                  <div className="flex items-center gap-1">
+                    <span className="text-[11px] text-zinc-500">$</span>
+                    <input
+                      type="number"
+                      min={0}
+                      step={0.01}
+                      value={line.price}
+                      onChange={(e) =>
+                        updateNewLine(index, {
+                          price:
+                            e.target.value === ""
+                              ? 0
+                              : Number(e.target.value) || 0,
+                        })
+                      }
+                      placeholder="Price each"
+                      className="w-24 rounded-xl border border-zinc-200 bg-white px-2 py-1.5 text-xs"
+                    />
+                  </div>
                 </div>
                 <input
                   value={line.productUrl}
