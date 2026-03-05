@@ -86,9 +86,6 @@ export default function PublicRequestPage() {
         }));
 
       setItems(available);
-      if (available.length > 0) {
-        setExistingLines([{ itemId: available[0].id, quantity: 1 }]);
-      }
       setLoading(false);
     };
     load();
@@ -194,9 +191,9 @@ export default function PublicRequestPage() {
     );
     if (totalNewCost > 150) {
       setError(
-        `The total estimated cost of new items must be $150 or less. Your current total is approximately $${totalNewCost.toFixed(
+        `We typically fund new items when the estimated total is around $150 or less. Your current total is approximately $${totalNewCost.toFixed(
           2,
-        )}. For requests above this, please email rachel.rowe@hult.edu or emilie.bader@hult.edu to enquire about pitching to the Funding Committee.`,
+        )}. For larger budgets, please email rachel.rowe@hult.edu or emilie.bader@hult.edu to enquire about pitching to the Funding Committee.`,
       );
       return;
     }
@@ -397,9 +394,9 @@ export default function PublicRequestPage() {
             2. What would you like to request?
           </h2>
           <p className="text-[11px] text-zinc-500">
-            Choose items from the list below. If you need something we don&apos;t
-            currently own, add it under &quot;New items to order&quot; with a
-            link.
+            Start by choosing items from our existing closet if you need them. If
+            you only need things we don&apos;t currently own, you can skip this
+            list and just use &quot;New items to order&quot; below.
           </p>
           <div className="space-y-2">
             {existingLines.map((line, index) => (
@@ -431,15 +428,13 @@ export default function PublicRequestPage() {
                   }
                   className="w-20 rounded-xl border border-zinc-200 bg-white px-2 py-1.5 text-xs"
                 />
-                {existingLines.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => removeExistingLine(index)}
-                    className="rounded-xl border border-zinc-200 bg-white px-2 py-1 text-[11px] text-zinc-600 hover:bg-zinc-100"
-                  >
-                    Remove
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={() => removeExistingLine(index)}
+                  className="rounded-xl border border-zinc-200 bg-white px-2 py-1 text-[11px] text-zinc-600 hover:bg-zinc-100"
+                >
+                  Remove
+                </button>
               </div>
             ))}
             {items.length > 0 && (
