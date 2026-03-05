@@ -446,7 +446,7 @@ export default function PublicRequestPage() {
                 onClick={addExistingLine}
                 className="rounded-xl border border-zinc-200 bg-white px-2 py-1 text-[11px] font-medium text-zinc-700 hover:bg-zinc-50"
               >
-                + Add another existing item
+                + Add existing item
               </button>
             )}
           </div>
