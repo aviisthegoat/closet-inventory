@@ -856,9 +856,10 @@ export default function PublicRequestPage() {
               onChange={(e) => setResponsibility(e.target.checked)}
             />
             <span>
-              I understand our club and the person collecting will be
-              responsible for all items and will return them in the same
-              condition.
+              I understand that our club and the person collecting will be
+              responsible for all items, will return them in the same condition,
+              and that if anything is lost or broken the replacement cost will
+              be covered from the club&apos;s budget.
             </span>
           </label>
         </div>
