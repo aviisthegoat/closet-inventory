@@ -51,6 +51,22 @@ export default function PublicRequestPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
+  const allNewLinesForTotal = [
+    ...newLines,
+    ...(isFoodOrder ? foodLines : []),
+  ];
+  const estimatedNewItemsTotal = allNewLinesForTotal.reduce((sum, line) => {
+    if (
+      !line.name.trim() ||
+      !line.productUrl.trim() ||
+      !line.quantity ||
+      !line.price
+    ) {
+      return sum;
+    }
+    return sum + line.price * line.quantity;
+  }, 0);
+
   useEffect(() => {
     const load = async () => {
       setLoading(true);
@@ -494,7 +510,7 @@ export default function PublicRequestPage() {
                       type="number"
                       min={0}
                       step={0.01}
-                      value={line.price}
+                      value={line.price || ""}
                       onChange={(e) =>
                         updateNewLine(index, {
                           price:
@@ -503,7 +519,7 @@ export default function PublicRequestPage() {
                               : Number(e.target.value) || 0,
                         })
                       }
-                      placeholder="Price each"
+                      placeholder="Unit cost"
                       className="w-24 rounded-xl border border-zinc-200 bg-white px-2 py-1.5 text-xs"
                     />
                   </div>
@@ -587,7 +603,7 @@ export default function PublicRequestPage() {
                           type="number"
                           min={0}
                           step={0.01}
-                          value={line.price}
+                          value={line.price || ""}
                           onChange={(e) =>
                             updateFoodLine(index, {
                               price:
@@ -596,7 +612,7 @@ export default function PublicRequestPage() {
                                   : Number(e.target.value) || 0,
                             })
                           }
-                          placeholder="Price each"
+                          placeholder="Unit cost"
                           className="w-24 rounded-xl border border-zinc-200 bg-zinc-50 px-2 py-1.5 text-xs"
                         />
                       </div>
@@ -667,6 +683,13 @@ export default function PublicRequestPage() {
             </div>
           )}
         </div>
+
+        {estimatedNewItemsTotal > 0 && (
+          <p className="text-[11px] font-medium text-zinc-800">
+            Estimated total for new items (including any food / beverages): $
+            {estimatedNewItemsTotal.toFixed(2)}
+          </p>
+        )}
 
         <div className="space-y-3">
           <h2 className="text-sm font-semibold text-zinc-900">
