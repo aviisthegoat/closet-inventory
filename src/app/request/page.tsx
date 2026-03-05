@@ -208,7 +208,7 @@ export default function PublicRequestPage() {
     );
     if (totalNewCost > 150) {
       setError(
-        `We typically fund new items when the estimated total is around $150 or less. Your current total is approximately $${totalNewCost.toFixed(
+        `Request not submitted. We typically fund new items when the estimated total is around $150 or less (covered from the club's budget). Your current total is approximately $${totalNewCost.toFixed(
           2,
         )}. For larger budgets, please email rachel.rowe@hult.edu or emilie.bader@hult.edu to enquire about pitching to the Funding Committee.`,
       );
@@ -381,17 +381,6 @@ export default function PublicRequestPage() {
         onSubmit={handleSubmit}
         className="space-y-4 rounded-3xl bg-white p-4 shadow-sm ring-1 ring-zinc-100"
       >
-        {error && (
-          <p className="rounded-2xl bg-rose-50 px-3 py-2 text-xs text-rose-700">
-            {error}
-          </p>
-        )}
-        {success && (
-          <p className="rounded-2xl bg-emerald-50 px-3 py-2 text-xs text-emerald-700">
-            Request submitted! We&apos;ll review and follow up.
-          </p>
-        )}
-
         <div className="space-y-2">
           <h2 className="text-sm font-semibold text-zinc-900">
             What would you like to request?
@@ -868,6 +857,17 @@ export default function PublicRequestPage() {
             </span>
           </label>
         </div>
+
+        {error && (
+          <p className="rounded-2xl bg-rose-50 px-3 py-2 text-xs text-rose-700">
+            {error}
+          </p>
+        )}
+        {success && (
+          <p className="rounded-2xl bg-emerald-50 px-3 py-2 text-xs text-emerald-700">
+            Request submitted! We&apos;ll review and follow up.
+          </p>
+        )}
 
         <button
           type="submit"
