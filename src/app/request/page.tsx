@@ -41,6 +41,7 @@ export default function PublicRequestPage() {
   const [collectorEmail, setCollectorEmail] = useState("");
   const [pickupDate, setPickupDate] = useState("");
   const [pickupTime, setPickupTime] = useState("");
+  const [returnDate, setReturnDate] = useState("");
   const [dropoffTime, setDropoffTime] = useState("");
   const [deliveryDate, setDeliveryDate] = useState("");
   const [deliveryTime, setDeliveryTime] = useState("");
@@ -232,9 +233,11 @@ export default function PublicRequestPage() {
 
     const supabase = createSupabaseBrowserClient();
     const pickupAt = new Date(`${pickupDate}T${pickupTime}:00`).toISOString();
-    const dropoffAt = dropoffTime
-      ? new Date(`${pickupDate}T${dropoffTime}:00`).toISOString()
-      : null;
+    const dropoffBaseDate = returnDate || pickupDate;
+    const dropoffAt =
+      dropoffTime && dropoffBaseDate
+        ? new Date(`${dropoffBaseDate}T${dropoffTime}:00`).toISOString()
+        : null;
 
     const itemsById = new Map(items.map((i) => [i.id, i]));
 
@@ -347,6 +350,7 @@ export default function PublicRequestPage() {
       setCollectorEmail("");
       setPickupDate("");
       setPickupTime("");
+      setReturnDate("");
       setDropoffTime("");
        setDeliveryDate("");
        setDeliveryTime("");
@@ -738,7 +742,7 @@ export default function PublicRequestPage() {
 
         <div className="space-y-3">
           <h2 className="text-sm font-semibold text-zinc-900">
-            Pickup / drop-off details
+            Pickup / return details
           </h2>
           <div className="grid gap-3 md:grid-cols-2">
             <div className="space-y-1">
@@ -765,7 +769,18 @@ export default function PublicRequestPage() {
             </div>
             <div className="space-y-1">
               <label className="block text-xs font-medium text-zinc-700">
-                Expected drop-off time (optional)
+                Expected return date (optional)
+              </label>
+              <input
+                type="date"
+                value={returnDate}
+                onChange={(e) => setReturnDate(e.target.value)}
+                className="block w-full rounded-2xl border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="block text-xs font-medium text-zinc-700">
+                Expected return time (optional)
               </label>
               <input
                 type="time"
