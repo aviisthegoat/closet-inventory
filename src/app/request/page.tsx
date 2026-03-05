@@ -454,7 +454,7 @@ export default function PublicRequestPage() {
 
         <div className="space-y-2">
           <h3 className="text-xs font-semibold text-zinc-900">
-            Request new items (we don&apos;t have these yet)
+            Request new items (not found in inventory)
           </h3>
           <p className="text-[11px] text-zinc-500">
             For items we don&apos;t already own, we&apos;ll do our best, but{" "}
